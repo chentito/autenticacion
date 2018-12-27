@@ -17,6 +17,7 @@
     public $certificadoB64 = "";
     public $diffMinServSat = 360;
     public $temps = array();
+    public $request = "";
     public $response = "";
     public $error = "";
     public $codigo = "";
@@ -47,12 +48,17 @@
             CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST  => 'POST',
             CURLOPT_POSTFIELDS     => $msj,
+            CURLINFO_HEADER_OUT    => true,
             CURLOPT_HTTPHEADER     => $headers
         ));
 
+        $info = curl_getinfo( $this->curl );
+        $this->request  = serialize( $info );
         $this->response = curl_exec( $this->curl );
         $this->error    = curl_error( $this->curl );
         $this->codigo   = curl_getinfo( $this->curl , CURLINFO_HTTP_CODE );
+
+        curl_close( $this->curl );
 
         if ( $this->error ) {
             throw new Exception( "[".$operacion."] Error en la comunicacion CURL " . $this->error . '/' . $this->codigo );

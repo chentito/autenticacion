@@ -18,11 +18,12 @@ class verificacion extends Utils {
     public $codigoEstatus = '';
     public $estadoSolicitud = '';
     public $codigoEstadoSolicitud = '';
+    public $paquetes = array();
 
     /*
      * Atributos privados
      */
-    private $urlSAT = 'https://srvsolicituddescargamaster.cloudapp.net/VerificaSolicitudDescargaService.svc';
+    private $urlSAT = 'https://cfdidescargamasivasolicitud.clouda.sat.gob.mx/VerificaSolicitudDescargaService.svc';
     private $ids = array();
     private $arrData = array();
     private $msjVer = '';
@@ -64,11 +65,10 @@ class verificacion extends Utils {
         $this->msjVer();
         $headers = array (
             'Accept-Encodign: gzip,deflate',
-            'Content-Type: text/xml; charset=UTF-8',
-            'SOAPAction: http://DescargaMasivaTerceros.sat.gob.mx/ISolicitaDescargaService/SolicitaDescarga',
+            'Content-Type: text/xml; charset=UTF-8',            
             'Authorization: WRAP access_token="'.$this->token.'"',
-            'Content-Length: 4736',
-            'Host: srvsolicituddescargamaster.cloudapp.net'
+            'SOAPAction: http://DescargaMasivaTerceros.sat.gob.mx/IVerificaSolicitudDescargaService/VerificaSolicitudDescarga',
+            'Content-Length: '.strlen( $this->msjVer )
         );
 
         try{
@@ -115,10 +115,6 @@ class verificacion extends Utils {
                          . '<des:solicitud IdSolicitud="'.$this->arrData[ 'idSolicitud' ].'" '
                          . 'RfcSolicitante="'.$this->arrData[ 'rfcSolicitante' ].'"></des:solicitud>'
                          . '</des:VerificaSolicitudDescarga>';
-        $this->timeStamp = '<des:SolicitaDescarga xmlns:des="http://DescargaMasivaTerceros.sat.gob.mx">'
-                         . '<des:solicitud FechaFinal="'.$this->arrData[ 'fechaFinal' ].'" FechaInicial="'.$this->arrData[ 'fechaInicial' ].'" '
-                         . 'RfcEmisor="'.$this->arrData[ 'rfcEmisor' ].'" RfcReceptor="'.$this->arrData[ 'rfcReceptor' ].'" '
-                         . 'RfcSolicitante="'.$this->arrData[ 'rfcSolicitante' ].'" TipoSolicitud="CFDI"></des:solicitud></des:SolicitaDescarga>';
         $this->digestValue = $this->digestValue( $this->timeStamp );
         $this->signedInfo();
     }
@@ -157,7 +153,8 @@ class verificacion extends Utils {
     /* Metodo que obtiene el token para la autenticacion */
     private function creaToken() {
         $t = new Auth();
-        return $t->obtieneToken();
+        $t->obtieneToken();
+        return $t->token;
     }
 
     /* Metodo que obtiene token del responde */
@@ -168,11 +165,15 @@ class verificacion extends Utils {
         if( $dom->getElementsByTagName( 'faultcode' )->length > 0 ) {
                 $this->faultstring = utf8_decode( $dom->getElementsByTagName( 'faultstring' )->item( 0 )->nodeValue );
                 $this->faultcode   = utf8_decode( $dom->getElementsByTagName( 'faultcode' )->item( 0 )->nodeValue );
-            } elseif( $sol = $dom->getElementsByTagName( 'VerificaSolicitudDescargaResult' )->length > 0 ) {
-                $this->codigoEstatus         = utf8_decode( $sol->getAttribute( 'CodEstatus' ) );
-                $this->estadoSolicitud       = utf8_decode( $sol->getAttribute( 'EstadoSolicitud' ) );
-                $this->codigoEstadoSolicitud = utf8_decode( $sol->getAttribute( 'CodigoEstadoSolicitud' ) );
-                $this->mensaje               = utf8_decode( $sol->getAttribute( 'Mensaje' ) );
+            } elseif( $dom->getElementsByTagName( 'VerificaSolicitudDescargaResult' )->length > 0 ) {
+                $sol = $dom->getElementsByTagName( 'VerificaSolicitudDescargaResult' );
+                $this->codigoEstatus         = utf8_decode( $sol->item( 0 )->getAttribute( 'CodEstatus' ) );
+                $this->estadoSolicitud       = utf8_decode( $sol->item( 0 )->getAttribute( 'EstadoSolicitud' ) );
+                $this->codigoEstadoSolicitud = utf8_decode( $sol->item( 0 )->getAttribute( 'CodigoEstadoSolicitud' ) );
+                $this->mensaje               = utf8_decode( $sol->item( 0 )->getAttribute( 'Mensaje' ) );
+                for( $p = 0 ; $p < $dom->getElementsByTagName( 'IdsPaquetes' )->length ; $p ++ ) {
+                    $this->paquetes[] = $dom->getElementsByTagName( 'IdsPaquetes' )->item( $p )->nodeValue;
+                }
         }
     }
 

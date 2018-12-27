@@ -19,8 +19,7 @@
     /* 
      * Atributos privados
      */
-    private $urlSATSol2 = 'https://srvsolicituddescargamaster.cloudapp.net/SolicitaDescargaService.svc';
-    private $urlSATSol = 'https://cfdidescargamasivasolicitud.clouda.sat.gob.mx/VerificaSolicitudDescargaService.svc';
+    private $urlSATSol = 'https://cfdidescargamasivasolicitud.clouda.sat.gob.mx/SolicitaDescargaService.svc';
     private $ids = array();
     private $arrData = array();
     private $msjSol = array();
@@ -47,7 +46,7 @@
     /* Metodo que realiza la solicitud de descarga */
     public function generaPeticionDescarga( $datos ) {
         $this->arrData = $datos;
-        $this->token = $this->creaToken();  
+        $this->token = $this->creaToken();
         $this->ids = $this->idty();
         $this->getFiel(); 
         $this->solicitudDescarga();
@@ -61,12 +60,12 @@
     private function solicitudDescarga() {
         $this->msjSol();
         $headers = array (
-            'Accept-Encodign: gzip,deflate',
-            'Content-Type: text/xml; charset=UTF-8',
-            'SOAPAction: http://DescargaMasivaTerceros.sat.gob.mx/ISolicitaDescargaService/SolicitaDescarga',
-            'Authorization: WRAP access_token="'.$this->token.'"',
-            //'Content-Length: 4736',
-            //'Host: srvsolicituddescargamaster.cloudapp.net'
+            "Content-type: text/xml;charset=\"utf-8\"",
+            "Accept: text/xml",
+            "Cache-Control: no-cache",
+            "Authorization: WRAP access_token=\"".$this->token."\"",
+            "SOAPAction: http://DescargaMasivaTerceros.sat.gob.mx/ISolicitaDescargaService/SolicitaDescarga",
+            "Content-length: ".strlen( $this->msjSol )
         );
 
         try{
@@ -152,7 +151,8 @@
     /* Metodo que obtiene el token para la autenticacion */
     private function creaToken() {
         $t = new Auth();
-        return $t->obtieneToken();
+        $t->obtieneToken();
+        return $t->token;
     }
 
     /* Metodo que obtiene token del responde */
@@ -163,7 +163,8 @@
         if( $dom->getElementsByTagName( 'faultcode' )->length > 0 ) {
                 $this->faultstring = utf8_decode( $dom->getElementsByTagName( 'faultstring' )->item( 0 )->nodeValue );
                 $this->faultcode   = utf8_decode( $dom->getElementsByTagName( 'faultcode' )->item( 0 )->nodeValue );
-            } elseif( $sol = $dom->getElementsByTagName( 'SolicitaDescargaResult' )->length > 0 ) {
+            } elseif( $dom->getElementsByTagName( 'SolicitaDescargaResult' )->length > 0 ) {
+                $sol = $dom->getElementsByTagName( 'SolicitaDescargaResult' )->item( 0 );
                 $this->idSolicitud = utf8_decode( $sol->getAttribute( 'IdSolicitud' ) );
                 $this->codigo      = utf8_decode( $sol->getAttribute( 'CodEstatus' ) );
                 $this->mensaje     = utf8_decode( $sol->getAttribute( 'Mensaje' ) );
