@@ -19,9 +19,9 @@ class SATAuth {
     public $expires     = '';
     public $faultcode   = '';
     public $faultstring = '';
-    public $password    = "2912lojo";
-    public $archivoCer  = "resc840317j72.cer";
-    public $archivoKey  = "resc840317j72.key";
+    public $password    = "xxxxxxxx";
+    public $archivoCer  = "xxxxxxxx.cer";
+    public $archivoKey  = "xxxxxxxx.key";
     public $database    = "cfd_mexagon_resc840317j72";
 
     /*
